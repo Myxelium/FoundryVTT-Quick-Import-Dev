@@ -1,0 +1,48 @@
+#easy-battlemap-drop-area {
+  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid #7a7971;
+  border-radius: 5px;
+}
+
+#easy-battlemap-drop-area header {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  border-bottom: 1px solid #7a7971;
+  text-align: center;
+}
+
+.easy-battlemap-dropzone {
+  padding: 15px;
+  text-align: center;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.easy-battlemap-instructions {
+  font-style: italic;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.easy-battlemap-status {
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0;
+}
+
+.easy-battlemap-status .status-value {
+  font-weight: bold;
+}
+
+.create-scene-button {
+  width: 80%;
+  margin: 0 auto;
+}
+
+#easy-battlemap-drop-area.highlight {
+  border-color: #ff6400;
+  background-color: rgba(255, 100, 0, 0.1);
+}

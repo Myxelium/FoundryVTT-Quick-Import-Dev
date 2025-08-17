@@ -1,0 +1,28 @@
+{
+  "id": "easy-battlemap",
+  "title": "Easy Battlemap",
+  "description": "Create battlemaps by simply dragging in a background image and wall data JSON file",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "10",
+    "verified": "11"
+  },
+  "authors": [
+    {
+      "name": "MyxeliumI",
+      "url": "https://github.com/MyxeliumI"
+    }
+  ],
+  "esmodules": ["scripts/easy-battlemap.js"],
+  "styles": ["styles/easy-battlemap.css"],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "languages/en.json"
+    }
+  ],
+  "url": "https://github.com/MyxeliumI/easy-battlemap",
+  "manifest": "https://github.com/MyxeliumI/easy-battlemap/releases/latest/download/module.json",
+  "download": "https://github.com/MyxeliumI/easy-battlemap/releases/latest/download/easy-battlemap.zip"
+}

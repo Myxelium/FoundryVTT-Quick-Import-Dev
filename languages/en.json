@@ -1,0 +1,16 @@
+{
+  "EASYBATTLEMAP": {
+    "Ready": "Easy Battlemap module is ready",
+    "DropAreaTitle": "Easy Battlemap Creator",
+    "DropInstructions": "Drop a background image and a JSON file with wall data here",
+    "BackgroundStatus": "Background Image",
+    "WallDataStatus": "Wall Data",
+    "CreateScene": "Create Battlemap Scene",
+    "MissingFiles": "Both background image and wall data JSON are required",
+    "CreatingScene": "Creating battlemap scene...",
+    "SceneCreated": "Battlemap scene created",
+    "UploadFailed": "Failed to upload background image",
+    "SceneCreationFailed": "Failed to create scene",
+    "InvalidJSON": "The JSON file could not be parsed"
+  }
+}

@@ -1,3 +1,16 @@
+.quick-battlemap .sheet-tabs {
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+}
+
+.quick-battlemap .tab[data-group] {
+    display: none;
+}
+
+.quick-battlemap .tab[data-group].active {
+    display: block;
+}
+
 .quick-battlemap .quick-battlemap-instructions {
     font-style: italic;
     margin: 0 0 0.5rem 0;
@@ -7,7 +20,8 @@
     font-weight: bold;
 }
 
-.quick-battlemap .create-scene-button {
+.quick-battlemap .create-scene-button,
+.quick-battlemap .universal-import button[type="submit"] {
     margin-left: auto;
 }
 
@@ -53,4 +67,58 @@
 
 .quick-battlemap-quick-import {
     flex: 1;
+}
+
+.quick-battlemap .map-files {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.quick-battlemap .map-file {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.quick-battlemap .map-file input {
+    flex: 1;
+}
+
+.quick-battlemap .map-file input[type="file"] {
+    flex: 2;
+}
+
+.quick-battlemap .map-file > :last-child {
+    flex: 0 0 1.5rem;
+    text-align: center;
+}
+
+.quick-battlemap .map-add {
+    text-align: center;
+    margin: 0.25rem 0;
+}
+
+.quick-battlemap .stitch-options {
+    margin: 0.75rem 0;
+}
+
+#quick-battlemap-map-progress progress {
+    width: 100%;
+}
+
+#quick-battlemap-map-progress .map-progress-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+#quick-battlemap-map-progress .map-progress-label {
+    font-weight: bold;
+}
+
+#quick-battlemap-map-progress .map-progress-detail {
+    opacity: 0.75;
 }

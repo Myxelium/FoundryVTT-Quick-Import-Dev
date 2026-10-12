@@ -2,7 +2,7 @@
  * Quick Battlemap Importer
  *
  * Drop a background image or video and optional wall JSON to create a
- * Foundry V14 scene. Universal VTT maps are handled by scripts/ddimport.js.
+ * Foundry V14 scene. Universal VTT maps are imported by this module.
  *
  * @module QuickBattlemap
  * @author Myxelium
@@ -11,6 +11,7 @@
 
 import { SceneImportController } from "./lib/scene-import-controller.js";
 import { MODULE_ID } from "./lib/constants.js";
+import { defaultUniversalSettings } from "./lib/universal-map.js";
 
 /** @type {SceneImportController|null} */
 let sceneImportController = null;
@@ -18,6 +19,19 @@ let sceneImportController = null;
 const QUICK_IMPORT_BUTTON_CLASS = "quick-battlemap-quick-import";
 
 Hooks.once("init", () => {
+    game.settings.register(MODULE_ID, "universalMap", {
+        scope: "world",
+        config: false,
+        default: defaultUniversalSettings(game.world?.id)
+    });
+    game.settings.register(MODULE_ID, "windowsAreDoors", {
+        name: "QUICKBATTLEMAP.WindowsAreDoors",
+        hint: "QUICKBATTLEMAP.WindowsAreDoorsHint",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false
+    });
     console.log(`${MODULE_ID} | Initializing module`);
 });
 

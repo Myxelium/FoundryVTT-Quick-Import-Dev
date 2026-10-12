@@ -13,7 +13,6 @@
       "url": "https://github.com/Myxelium"
     }
   ],
-  "scripts": ["scripts/ddimport.js"],
   "esmodules": ["scripts/quick-battlemap.js"],
   "styles": ["styles/quick-battlemap.css"],
   "languages": [

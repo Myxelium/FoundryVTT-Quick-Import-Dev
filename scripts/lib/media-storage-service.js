@@ -157,6 +157,35 @@ export class MediaStorageService {
     }
 
     /**
+     * Upload a prepared file and return the stored path.
+     * S3 uploads still proceed when the folder listing is unavailable.
+     *
+     * @param {File} file
+     * @param {string} directory
+     * @param {string} [source]
+     * @param {string} [bucket]
+     * @returns {Promise<string>}
+     */
+    async uploadNamedFile(file, directory, source = "data", bucket = "") {
+        const folder = String(directory || "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+        if (folder) {
+            try {
+                await this.ensureDirectoryExists(source, folder);
+            } catch (error) {
+                if (source !== "s3") throw error;
+                console.warn(`${MODULE_LOG_PREFIX} | Could not prepare S3 folder`, error);
+            }
+        }
+
+        const result = await FilePicker.upload(source, folder, file, {
+            bucket: bucket || null,
+            overwrite: true
+        });
+        if (!result?.path) throw new Error("The upload did not return a file path.");
+        return result.path;
+    }
+
+    /**
      * Handle upload errors by logging and notifying the user.
      * 
      * @param {Error} uploadError - The error that occurred

@@ -38,6 +38,9 @@ const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.sv
 /** Supported video file extensions */
 const VIDEO_EXTENSIONS = ['.webm', '.mp4', '.mov', '.m4v', '.avi', '.mkv', '.ogv', '.ogg'];
 
+/** Universal VTT exports from Dungeondraft, DungeonFog, Arkenforge, and AutoWall. */
+const UVTT_EXTENSIONS = ['.dd2vtt', '.df2vtt', '.uvtt'];
+
 /**
  * Service class for processing dropped files.
  * Handles reading files and determining their types.
@@ -141,7 +144,7 @@ export class FileProcessor {
      * Determine the type of a file based on MIME type and extension.
      * 
      * @param {File} file - The file to classify
-     * @returns {'image' | 'video' | 'json' | 'unknown'} The file type category
+     * @returns {'image' | 'video' | 'json' | 'uvtt' | 'unknown'} The file type category
      * 
      * @example
      * const fileType = processor.getFileType(droppedFile);
@@ -158,6 +161,10 @@ export class FileProcessor {
 
         if (mimeType.startsWith('video/')) {
             return 'video';
+        }
+
+        if (this.hasExtension(lowercaseFilename, UVTT_EXTENSIONS)) {
+            return 'uvtt';
         }
 
         if (mimeType === 'application/json') {

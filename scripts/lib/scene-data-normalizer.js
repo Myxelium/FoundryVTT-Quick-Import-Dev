@@ -53,8 +53,9 @@
  * @property {NormalizedGridSettings} grid - Grid configuration
  * @property {number} padding - Scene padding multiplier
  * @property {string} backgroundColor - Background color (hex)
- * @property {boolean} globalLight - Whether global illumination is enabled
- * @property {number} darkness - Darkness level (0-1)
+ * @property {number} shiftX - Horizontal scene shift in pixels
+ * @property {number} shiftY - Vertical scene shift in pixels
+ * @property {object} environment - V14 illumination settings
  * @property {NormalizedWallData[]} walls - Wall documents
  * @property {NormalizedLightData[]} lights - Ambient light documents
  * @property {Array} tokens - Token documents
@@ -100,15 +101,25 @@ export class SceneDataNormalizer {
     normalizeToFoundryFormat(inputData) {
         const sourceData = inputData || {};
 
+        const grid = this.normalizeGridSettings(sourceData);
+        const globalLight = sourceData.environment?.globalLight?.enabled ?? sourceData.globalLight;
+        const darkness = sourceData.environment?.darknessLevel ?? sourceData.darkness;
+
         const normalizedData = {
             name: sourceData.name,
             width: this.parseNumberOrUndefined(sourceData.width),
             height: this.parseNumberOrUndefined(sourceData.height),
-            grid: this.normalizeGridSettings(sourceData),
+            grid,
+            shiftX: grid.offset.x,
+            shiftY: grid.offset.y,
             padding: this.parseNumberWithDefault(sourceData.padding, SCENE_DEFAULTS.PADDING),
             backgroundColor: sourceData.backgroundColor ?? sourceData.gridColor ?? SCENE_DEFAULTS.BACKGROUND_COLOR,
-            globalLight: !!sourceData.globalLight,
-            darkness: this.parseNumberWithDefault(sourceData.darkness, SCENE_DEFAULTS.DARKNESS),
+            environment: {
+                darknessLevel: this.parseNumberWithDefault(darkness, SCENE_DEFAULTS.DARKNESS),
+                globalLight: {
+                    enabled: !!globalLight
+                }
+            },
             walls: this.normalizeWallsData(sourceData.walls || []),
             lights: this.normalizeLightsData(sourceData.lights || []),
             tokens: sourceData.tokens ?? [],
@@ -137,8 +148,14 @@ export class SceneDataNormalizer {
             GRID_DEFAULTS.ALPHA
         );
         const gridColor = sourceData.gridColor ?? sourceData.grid?.color ?? GRID_DEFAULTS.COLOR;
-        const offsetX = this.parseNumberWithDefault(sourceData.shiftX ?? sourceData.grid?.shiftX, 0);
-        const offsetY = this.parseNumberWithDefault(sourceData.shiftY ?? sourceData.grid?.shiftY, 0);
+        const offsetX = this.parseNumberWithDefault(
+            sourceData.shiftX ?? sourceData.grid?.offset?.x ?? sourceData.grid?.shiftX,
+            0
+        );
+        const offsetY = this.parseNumberWithDefault(
+            sourceData.shiftY ?? sourceData.grid?.offset?.y ?? sourceData.grid?.shiftY,
+            0
+        );
 
         return {
             size: gridSize,
@@ -232,11 +249,15 @@ export class SceneDataNormalizer {
      * @returns {{NONE: number, LIMITED: number, NORMAL: number}} Restriction type values
      */
     getWallRestrictionTypes() {
-        return globalThis?.CONST?.WALL_RESTRICTION_TYPES || {
-            NONE: 0,
-            LIMITED: 10,
-            NORMAL: 20
-        };
+        return globalThis?.CONST?.WALL_SENSE_TYPES
+            || globalThis?.CONST?.WALL_RESTRICTION_TYPES
+            || {
+                NONE: 0,
+                LIMITED: 10,
+                NORMAL: 20,
+                PROXIMITY: 30,
+                DISTANCE: 40
+            };
     }
 
     /**
@@ -301,6 +322,27 @@ export class SceneDataNormalizer {
      * @returns {NormalizedLightData} Normalized light document
      */
     normalizeLight(light) {
+        const hasFoundryConfig = light.config && (
+            light.config.bright != null
+            || light.config.dim != null
+            || light.config.color != null
+        );
+
+        if (hasFoundryConfig) {
+            const normalized = {
+                x: Number(light.x),
+                y: Number(light.y),
+                rotation: this.ensureFiniteNumber(light.rotation, 0),
+                hidden: !!light.hidden,
+                walls: light.walls !== false,
+                vision: !!light.vision,
+                config: { ...light.config }
+            };
+            if (light.elevation != null) normalized.elevation = light.elevation;
+            if (light.levels) normalized.levels = light.levels;
+            return normalized;
+        }
+
         return {
             x: Number(light.x),
             y: Number(light.y),

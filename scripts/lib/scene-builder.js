@@ -7,8 +7,8 @@
  * @module SceneBuilder
  */
 
-/** Module identifier for console logging */
-const MODULE_LOG_PREFIX = 'Quick Battlemap Importer';
+import { MODULE_LOG_PREFIX } from './constants.js';
+import { buildV14SceneData } from './scene-payload.js';
 
 /** Maximum time to wait for canvas to be ready (milliseconds) */
 const CANVAS_READY_TIMEOUT_MS = 8000;
@@ -73,20 +73,50 @@ export class SceneBuilder {
      * });
      */
     async createScene(options) {
-        const sceneDocumentData = {
-            name: options.sceneName,
-            img: options.backgroundPath,
-            background: { src: options.backgroundPath },
+        const normalized = {
+            ...(options.normalized ?? {}),
+            width: options.width,
+            height: options.height
+        };
+        const sceneDocumentData = buildV14SceneData({
+            sceneName: options.sceneName,
+            backgroundPath: options.backgroundPath,
             width: options.width,
             height: options.height,
-            padding: options.padding ?? 0,
-            backgroundColor: options.backgroundColor ?? '#000000',
-            globalLight: options.globalLight ?? false,
-            darkness: options.darkness ?? 0
-        };
+            normalized,
+            levelName: options.levelName || 'Background'
+        });
+        sceneDocumentData.walls = this.filterValidWalls(sceneDocumentData.walls);
+        sceneDocumentData.lights = this.filterValidLights(sceneDocumentData.lights);
 
+        try {
+            return await this.createSceneDocument(sceneDocumentData);
+        } catch (creationError) {
+            console.warn(`${MODULE_LOG_PREFIX} | Scene create rejected embedded placeables; retrying`, creationError);
+            const withoutPlaceables = { ...sceneDocumentData, walls: [], lights: [] };
+            const createdScene = await this.createSceneDocument(withoutPlaceables);
+            await this.createWalls(createdScene, sceneDocumentData.walls);
+            await this.createLights(createdScene, sceneDocumentData.lights);
+            return createdScene;
+        }
+    }
+
+    /**
+     * Persist a scene and refresh its sidebar thumbnail.
+     * Thumbnail generation is best-effort: a missing thumb does not fail the import.
+     *
+     * @param {object} sceneDocumentData
+     * @returns {Promise<Scene>}
+     */
+    async createSceneDocument(sceneDocumentData) {
         const createdScene = await Scene.create(sceneDocumentData);
-        
+        try {
+            const thumbnail = await createdScene.createThumbnail();
+            if (thumbnail?.thumb) await createdScene.update({ thumb: thumbnail.thumb });
+        } catch (thumbnailError) {
+            console.warn(`${MODULE_LOG_PREFIX} | Thumbnail generation failed`, thumbnailError);
+        }
+
         if (this.isDebugLoggingEnabled) {
             console.log(`${MODULE_LOG_PREFIX} | Created scene:`, createdScene.name);
         }
@@ -137,11 +167,12 @@ export class SceneBuilder {
      * @returns {boolean} True if canvas is ready
      */
     checkCanvasReadyState(targetScene) {
+        const lightingReady = canvas?.lighting?.initialized ?? canvas?.effects?.initialized;
         return (
             canvas?.ready &&
             canvas?.scene?.id === targetScene.id &&
             canvas?.walls?.initialized !== false &&
-            canvas?.lighting?.initialized !== false
+            lightingReady !== false
         );
     }
 
@@ -153,79 +184,30 @@ export class SceneBuilder {
      * @param {boolean} [useNoGridMode=false] - Override grid type to 0 (none)
      */
     async applyGridSettings(scene, gridSettings, useNoGridMode = false) {
-        // Override grid type if no-grid mode is enabled
         const effectiveGridSettings = { ...gridSettings };
         if (useNoGridMode) {
             effectiveGridSettings.type = 0;
         }
 
-        const sceneSnapshot = duplicate(scene.toObject());
-        const usesObjectGridFormat = typeof sceneSnapshot.grid === 'object';
-
-        if (this.isDebugLoggingEnabled) {
-            console.log(`${MODULE_LOG_PREFIX} | Scene grid snapshot:`, sceneSnapshot.grid);
-        }
-
-        if (usesObjectGridFormat) {
-            await this.applyObjectGridSettings(scene, sceneSnapshot, effectiveGridSettings);
-        } else {
-            await this.applyLegacyGridSettings(scene, effectiveGridSettings);
-        }
-
-        if (this.isDebugLoggingEnabled) {
-            const updatedSnapshot = duplicate(scene.toObject());
-            console.log(`${MODULE_LOG_PREFIX} | Grid after update:`, updatedSnapshot.grid);
-        }
-    }
-
-    /**
-     * Apply grid settings using modern object format (Foundry v10+).
-     * Falls back to legacy format if update fails.
-     * 
-     * @param {Scene} scene - The scene to update
-     * @param {Object} snapshot - Current scene data snapshot
-     * @param {GridSettings} gridSettings - Grid settings to apply
-     */
-    async applyObjectGridSettings(scene, snapshot, gridSettings) {
         const gridUpdateData = {
-            ...(snapshot.grid || {}),
-            size: gridSettings.size,
-            type: gridSettings.type,
-            distance: gridSettings.distance,
-            units: gridSettings.units,
-            color: gridSettings.color,
-            alpha: gridSettings.alpha,
-            offset: {
-                x: gridSettings.offset?.x ?? 0,
-                y: gridSettings.offset?.y ?? 0
-            }
+            size: effectiveGridSettings.size,
+            type: effectiveGridSettings.type,
+            distance: effectiveGridSettings.distance,
+            units: effectiveGridSettings.units,
+            color: effectiveGridSettings.color,
+            alpha: effectiveGridSettings.alpha
         };
+        const shiftX = effectiveGridSettings.shiftX ?? effectiveGridSettings.offset?.x ?? 0;
+        const shiftY = effectiveGridSettings.shiftY ?? effectiveGridSettings.offset?.y ?? 0;
 
-        try {
-            await scene.update({ grid: gridUpdateData });
-        } catch (updateError) {
-            console.warn(`${MODULE_LOG_PREFIX} | Grid object update failed; using legacy format`, updateError);
-            await this.applyLegacyGridSettings(scene, gridSettings);
+        if (this.isDebugLoggingEnabled) {
+            console.log(`${MODULE_LOG_PREFIX} | Applying grid`, gridUpdateData, { shiftX, shiftY });
         }
-    }
 
-    /**
-     * Apply grid settings using legacy flat property format.
-     * Used for older Foundry versions or as fallback.
-     * 
-     * @param {Scene} scene - The scene to update
-     * @param {GridSettings} gridSettings - Grid settings to apply
-     */
-    async applyLegacyGridSettings(scene, gridSettings) {
         await scene.update({
-            grid: gridSettings.size,
-            gridType: gridSettings.type,
-            gridDistance: gridSettings.distance,
-            gridUnits: gridSettings.units,
-            gridColor: gridSettings.color,
-            gridAlpha: gridSettings.alpha,
-            shiftX: gridSettings.offset?.x ?? 0,
-            shiftY: gridSettings.offset?.y ?? 0
+            grid: gridUpdateData,
+            shiftX,
+            shiftY
         });
     }
 
@@ -317,14 +299,19 @@ export class SceneBuilder {
     }
 
     /**
-     * Create ambient light documents in a scene.
-     * 
-     * @param {Scene} scene - The scene to add lights to
-     * @param {Array} lightsData - Array of light document data
-     * @returns {Promise<void>}
+     * Drop lights that do not have a finite position.
+     *
+     * @param {Array} lightsData
+     * @returns {Array}
      */
+    filterValidLights(lightsData) {
+        return (lightsData || []).filter((light) => {
+            return Number.isFinite(Number(light?.x)) && Number.isFinite(Number(light?.y));
+        });
+    }
+
     async createLights(scene, lightsData) {
-        const lights = lightsData || [];
+        const lights = this.filterValidLights(lightsData);
         
         if (!lights.length) {
             return;

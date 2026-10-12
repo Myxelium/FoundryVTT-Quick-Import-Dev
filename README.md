@@ -35,7 +35,7 @@ Setting up scenes manually can be slow: uploading backgrounds, measuring grid si
 - Creates and activates a new Foundry v14 scene, with the background on a scene level
 - Optional "No grid" toggle for gridless maps
 - GM-only quick access button in the Scenes directory
-- Universal VTT import for Dungeondraft, DungeonFog, Arkenforge, and AutoWall (`.dd2vtt`, `.df2vtt`, `.uvtt`)
+- Universal VTT import for Dungeondraft, DungeonFog, Arkenforge, and AutoWall (`.dd2vtt`, `.df2vtt`, `.uvtt`), using the Universal Battlemap Importer
 - Multi-file import as stacked levels, or stitched horizontally, vertically, or in a grid
 - Cave-wall fidelity and offset, object walls, doors, windows, and lights
 - WebP conversion, custom pixels-per-grid, scene padding, and User Data or S3 upload
@@ -61,7 +61,7 @@ Manual download (optional):
 1. Enable the module in your world
 2. Open the Scenes sidebar
 3. Click the "Quick import" button (GM only)
-4. On the Quick Import tab, drag and drop one of the following:
+4. Drag and drop one of the following:
   - Background image (png, jpg, jpeg, webp) or video (webm, mp4)
   - Optional JSON export with walls and lights (for example, from Dungeon Alchemist or a Foundry scene export)
 5. Optionally enable "No grid" if the map is gridless
@@ -72,16 +72,16 @@ The module uploads the media to your world, applies grid settings (auto-detected
 ### Universal VTT
 
 1. Export the map as Universal VTT from DungeonFog, Dungeondraft, Arkenforge, or AutoWall.
-2. Open Quick import and switch to the Universal VTT tab.
+2. In the Scenes sidebar, click **Universal Battlemap Import**. Dropping a `.dd2vtt`, `.df2vtt`, or `.uvtt` file on the canvas opens the same dialog.
 3. Set the scene name, upload path, and options:
    - **Fidelity**: how many cave-wall points to keep. The left side uses fewer walls. The right side keeps every point.
    - **Offset**: nudges cave walls off the painted edge. Leave it at 0 if the walls already line up.
-   - **Levels**: each file becomes its own elevation in one scene. Use this for multi-floor maps.
+   - **Levels**: each file becomes its own level in one scene. Use this for multi-floor maps.
    - **Horizontal, vertical, or grid**: stitch several files into one image.
 4. If you do not use S3, leave Storage Type on User Data.
-5. Click Import Universal VTT.
+5. Click Submit.
 
-Portals that block light become doors. Other portals become windows. Enable "Openable windows" in the module settings if every portal should be a door.
+Portals that block light become doors. Other portals become windows. Enable "Openable Windows" in the module settings if every portal should be a door.
 
 ## Supported inputs
 
@@ -94,13 +94,13 @@ Portals that block light become doors. Other portals become windows. Enable "Ope
 - Grid auto-detection runs for images when no JSON is provided and may not succeed on all artwork
 - Auto-detection is intentionally skipped for videos
 - You can always create a scene with only a background; adjust grid later if needed
-- Universal VTT levels mode gives each file its own elevation band. Those images should be the same size
+- Universal VTT levels mode expects every image to be the same size
 - Very large Universal VTT maps are scaled down when they would exceed the browser canvas limit
 
 ## Credits
 
 - Author: Myxelium (https://github.com/Myxelium)
-- Universal VTT import is derived from [FVTT-DD-Import](https://github.com/moo-man/FVTT-DD-Import) by Moo Man (Russell), m42e, and jacquie, used under the MIT license. See `licenses/FVTT-DD-Import-MIT.txt`.
+- Universal VTT import is the [FVTT-DD-Import](https://github.com/moo-man/FVTT-DD-Import) source (v6.1.1) by Moo Man (Russell), m42e, and jacquie, included under the MIT license. The copy changes the template paths and settings namespace so they belong to this module, skips a duplicate scene-directory button when the directory re-renders, and exposes `DDImporter` so a dropped Universal VTT file can open the dialog. See `licenses/FVTT-DD-Import-MIT.txt`.
 
 ## License
 

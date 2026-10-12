@@ -1,5 +1,7 @@
-The Universal VTT importer in this module is derived from
-FVTT-DD-Import (Universal Battlemap Importer) by Russell ("Moo Man").
+The Universal VTT importer in this module is the FVTT-DD-Import
+(Universal Battlemap Importer) source by Russell ("Moo Man").
+Template paths and the settings namespace are adjusted so the importer
+loads inside quick-battlemap-importer.
 
 https://github.com/moo-man/FVTT-DD-Import
 

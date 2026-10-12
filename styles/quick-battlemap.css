@@ -1,16 +1,3 @@
-.quick-battlemap .sheet-tabs {
-    margin-bottom: 0.75rem;
-    gap: 0.5rem;
-}
-
-.quick-battlemap .tab[data-group] {
-    display: none;
-}
-
-.quick-battlemap .tab[data-group].active {
-    display: block;
-}
-
 .quick-battlemap .quick-battlemap-instructions {
     font-style: italic;
     margin: 0 0 0.5rem 0;
@@ -20,13 +7,12 @@
     font-weight: bold;
 }
 
-.quick-battlemap .create-scene-button,
-.quick-battlemap .import-uvtt-button {
+.quick-battlemap .create-scene-button {
     margin-left: auto;
 }
 
-.quick-battlemap .quick-tab.highlight .area,
-.quick-battlemap .quick-tab.highlight #dropZone {
+.quick-battlemap .quick-import.highlight .area,
+.quick-battlemap .quick-import.highlight #dropZone {
     outline: 2px solid var(--color-border-highlight, #ff6400);
     background-color: rgba(255, 100, 0, 0.08);
 }
@@ -63,68 +49,6 @@
     font-size: 1.15rem;
     font-weight: bold;
     color: var(--color-text-light-6, #bbb);
-}
-
-.quick-battlemap .levels {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin: 0.75rem 0;
-}
-
-.quick-battlemap .level {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.quick-battlemap .level input {
-    flex: 1;
-}
-
-.quick-battlemap .level input[type="file"] {
-    flex: 2;
-}
-
-.quick-battlemap .level > :last-child {
-    flex: 0 0 1.5rem;
-    text-align: center;
-}
-
-.quick-battlemap .add-file {
-    text-align: center;
-    margin: 0.25rem 0;
-}
-
-.quick-battlemap .advanced-options,
-.quick-battlemap .multi-mode-section {
-    margin: 0.75rem 0;
-}
-
-.quick-battlemap-progress .qb-progress-bar {
-    width: 100%;
-}
-
-.quick-battlemap-progress .qb-progress-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
-
-.quick-battlemap-progress .qb-progress-phase {
-    font-weight: bold;
-}
-
-.quick-battlemap-progress .qb-progress-detail {
-    opacity: 0.75;
-}
-
-.quick-battlemap-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    z-index: 90;
 }
 
 .quick-battlemap-quick-import {

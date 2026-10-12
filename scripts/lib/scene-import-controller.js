@@ -12,10 +12,9 @@ import { QuickImportApplication } from './import-application.js';
 import { SceneDataNormalizer } from './scene-data-normalizer.js';
 import { MediaStorageService } from './media-storage-service.js';
 import { GridDetectionService } from './grid-detection-service.js';
-import { FileProcessor } from './file-processor.js';
+import { FileProcessor, isUniversalVttData } from './file-processor.js';
 import { SceneBuilder } from './scene-builder.js';
 import { MODULE_LOG_PREFIX, NO_GRID_STORAGE_KEY } from './constants.js';
-import { isUniversalVttData } from './uvtt-geometry.js';
 
 /**
  * @typedef {Object} BackgroundMediaData
@@ -66,14 +65,25 @@ export class SceneImportController {
 
     /**
      * Show the import panel to the user. Validates GM permissions before displaying.
-     * @param {"quick"|"uvtt"} [tab]
      */
-    showImportPanel(tab) {
+    showImportPanel() {
         if (!game.user?.isGM) {
             ui.notifications?.warn?.(game.i18n.localize('QUICKBATTLEMAP.GMOnly'));
             return;
         }
-        return this.panelView.show(tab);
+        return this.panelView.show();
+    }
+
+    /**
+     * Open the upstream Universal Battlemap Importer.
+     */
+    openUniversalImporter() {
+        const Importer = globalThis.DDImporter;
+        if (typeof Importer !== "function") {
+            ui.notifications?.error?.(game.i18n.localize("QUICKBATTLEMAP.ImporterUnavailable"));
+            return;
+        }
+        new Importer().render(true);
     }
 
     /**
@@ -155,28 +165,25 @@ export class SceneImportController {
         const droppedFiles = [...(dropEvent?.dataTransfer?.files ?? [])];
         if (!droppedFiles.length) return;
 
-        const universalFiles = [];
+        let openUniversal = false;
         for (const file of droppedFiles) {
             const fileType = this.fileProcessor.getFileType(file);
 
             if (fileType === 'image') {
-                await this.showImportPanel('quick');
+                await this.showImportPanel();
                 await this.handleImageFile(file);
             } else if (fileType === 'video') {
-                await this.showImportPanel('quick');
+                await this.showImportPanel();
                 this.handleVideoFile(file);
             } else if (fileType === 'uvtt') {
-                universalFiles.push(file);
+                openUniversal = true;
             } else if (fileType === 'json') {
                 const universal = await this.readUniversalVttOrConfig(file);
-                if (universal) universalFiles.push(file);
+                if (universal) openUniversal = true;
             }
         }
 
-        if (universalFiles.length) {
-            await this.showImportPanel('uvtt');
-            for (const file of universalFiles) this.panelView.addUvttFile(file);
-        }
+        if (openUniversal) this.openUniversalImporter();
     }
 
     /**
@@ -189,7 +196,7 @@ export class SceneImportController {
         try {
             const processedJson = await this.fileProcessor.processJsonFile(jsonFile);
             if (isUniversalVttData(processedJson.parsedContent)) return true;
-            await this.showImportPanel('quick');
+            await this.showImportPanel();
             this.importedSceneStructure = processedJson.parsedContent;
             this.panelView.updateWallDataStatus(true, jsonFile.name);
             this.updateCreateButtonState();

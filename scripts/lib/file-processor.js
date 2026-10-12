@@ -290,3 +290,17 @@ export class FileProcessor {
         }
     }
 }
+
+/**
+ * Universal VTT documents carry a map size plus walls or an embedded image.
+ * @param {object|null|undefined} data
+ * @returns {boolean}
+ */
+export function isUniversalVttData(data) {
+    return !!data
+        && typeof data === "object"
+        && !!data.resolution?.map_size
+        && Number.isFinite(Number(data.resolution.map_size.x))
+        && Number.isFinite(Number(data.resolution.map_size.y))
+        && (Array.isArray(data.line_of_sight) || typeof data.image === "string");
+}

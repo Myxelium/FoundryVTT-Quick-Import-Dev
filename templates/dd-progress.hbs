@@ -1,0 +1,32 @@
+<div class="dd-progress-content">
+  <style>
+    .dd-import-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 99;
+    }
+    #dd-import-progress .dd-progress-bar {
+      width: 100%;
+    }
+    #dd-import-progress .dd-progress-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+    #dd-import-progress .dd-progress-phase {
+      font-weight: bold;
+    }
+    #dd-import-progress .dd-progress-detail {
+      opacity: 0.7;
+      font-size: 0.9em;
+    }
+  </style>
+  <div class="dd-progress-row">
+    <progress class="dd-progress-bar" value="0" max="100"></progress>
+  </div>
+  <div class="dd-progress-row">
+    <span class="dd-progress-phase">Starting import</span>
+    <span class="dd-progress-detail"></span>
+  </div>
+</div>

@@ -1,11 +1,11 @@
 {
   "id": "quick-battlemap-importer",
   "title": "Quick Battlemap Importer",
-  "description": "Import battlemaps by simply dragging in a background image and wall/light data JSON file",
-  "version": "1.4.2",
+  "description": "Import battlemaps from images, wall JSON, or Universal VTT files (.dd2vtt, .df2vtt, .uvtt) into Foundry VTT v14 scenes",
+  "version": "2.0.0",
   "compatibility": {
-    "minimum": "10",
-    "verified": "12"
+    "minimum": "14",
+    "verified": "14"
   },
   "authors": [
     {

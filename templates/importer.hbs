@@ -1,0 +1,193 @@
+<nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-action="tab" data-group="primary" data-tab="quick">
+        <i class="fa-solid fa-image"></i> {{localize 'QUICKBATTLEMAP.TabQuick'}}
+    </a>
+    <a class="item" data-action="tab" data-group="primary" data-tab="universal">
+        <i class="fa-solid fa-layer-group"></i> {{localize 'QUICKBATTLEMAP.TabUniversal'}}
+    </a>
+</nav>
+
+<section class="tab quick-import" data-group="primary" data-tab="quick">
+    <p class="notes quick-battlemap-instructions">{{localize 'QUICKBATTLEMAP.DropInstructions'}}</p>
+    <div class="area"><div id="dropZone">{{localize 'QUICKBATTLEMAP.DropZone'}}</div></div>
+    <p class="notes quick-battlemap-instructions">{{localize 'QUICKBATTLEMAP.DropInstructionsMore'}}</p>
+
+    <div class="form-group">
+        <label>{{localize 'QUICKBATTLEMAP.BackgroundStatus'}}</label>
+        <div class="form-fields">
+            <span class="background-status"><span class="status-value">❌</span></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize 'QUICKBATTLEMAP.WallDataStatus'}}</label>
+        <div class="form-fields">
+            <span class="wall-data-status"><span class="status-value">❌</span></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize 'QUICKBATTLEMAP.Options'}}</label>
+        <div class="form-fields ebm-no-grid">
+            <label class="checkbox">
+                <input type="checkbox" class="ebm-no-grid" name="noGrid" {{checked noGrid}}>
+                <span>{{localize 'QUICKBATTLEMAP.NoGridLabel'}}</span>
+            </label>
+        </div>
+        <p class="hint">{{localize 'QUICKBATTLEMAP.NoGridHint'}}</p>
+    </div>
+    <div class="form-group progress-group" style="display:none">
+        <label>{{localize 'QUICKBATTLEMAP.ProgressLabel'}}</label>
+        <div class="form-fields ebm-progress-row">
+            <div class="ebm-spinner" aria-hidden="true"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <span class="ebm-progress-text">{{localize 'QUICKBATTLEMAP.ProgressIdle'}}</span>
+        </div>
+        <p class="notes">{{localize 'QUICKBATTLEMAP.ProgressNote'}}</p>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="button" class="reset-button" data-action="resetQuick">
+            <i class="fa-solid fa-rotate-left"></i> {{localize 'QUICKBATTLEMAP.Reset'}}
+        </button>
+        <button type="button" class="create-scene-button" data-action="createScene" disabled>
+            <i class="fa-solid fa-save"></i> {{localize 'QUICKBATTLEMAP.CreateScene'}}
+        </button>
+    </footer>
+</section>
+
+<section class="tab universal-import" data-group="primary" data-tab="universal">
+    <p class="notes quick-battlemap-instructions">{{localize 'QUICKBATTLEMAP.UniversalInstructions'}}</p>
+
+    <div class="form-group">
+        <label>{{localize 'QUICKBATTLEMAP.SceneName'}}</label>
+        <div class="form-fields">
+            <input type="text" name="sceneName">
+        </div>
+    </div>
+
+    <div class="map-files">
+        <div class="map-file">
+            <input type="text" name="mapName0" class="map-name" placeholder="{{localize 'QUICKBATTLEMAP.LevelName'}}">
+            <input type="file" name="mapFile0" accept=".dd2vtt,.df2vtt,.uvtt,.json">
+            <a data-action="removeMap"><i class="fa-solid fa-xmark"></i></a>
+        </div>
+        <p class="map-add"><a data-action="addMap"><i class="fa-solid fa-plus"></i> {{localize 'QUICKBATTLEMAP.AddMap'}}</a></p>
+    </div>
+
+    <fieldset class="stitch-options" style="display:none">
+        <legend>{{localize 'QUICKBATTLEMAP.SeveralMaps'}}</legend>
+        <div class="form-group">
+            <label>{{localize 'QUICKBATTLEMAP.Layout'}}</label>
+            <div class="form-fields">
+                <select name="layout">
+                    {{selectOptions layouts selected=layout}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group stitch-only">
+            <label>{{localize 'QUICKBATTLEMAP.FrameMaps'}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="frameMaps" {{checked frameMaps}}>
+            </div>
+        </div>
+        <p class="hint stitch-only">{{localize 'QUICKBATTLEMAP.FrameMapsHint'}}</p>
+        <div class="form-group stitch-only">
+            <label>{{localize 'QUICKBATTLEMAP.CombinedName'}}</label>
+            <div class="form-fields">
+                <input type="text" name="combinedName">
+            </div>
+        </div>
+        <p class="hint levels-note">{{localize 'QUICKBATTLEMAP.LevelsNote'}}</p>
+    </fieldset>
+
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.DetailHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.WallDetail'}}</label>
+        <div class="form-fields">
+            <input class="detail-input" type="range" min="1" max="6" step="1" name="detail" value="{{detail}}">
+        </div>
+    </div>
+    <div class="warning detail notification error" style="display:none">{{localize 'QUICKBATTLEMAP.DetailWarning'}}</div>
+
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.NudgeHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.WallNudge'}}</label>
+        <div class="form-fields">
+            <input type="number" name="nudge" min="-3" max="3" step="0.1" value="{{nudge}}">
+        </div>
+    </div>
+
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.ObjectWallsHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.ObjectWalls'}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="objectWalls" {{checked objectWalls}}>
+        </div>
+    </div>
+
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.PaddingHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.Padding'}}</label>
+        <div class="form-fields">
+            <range-picker name="padding" value="{{padding}}" min="0" max="0.5" step="0.05">
+                <input type="range" min="0" max="0.5" step="0.05" value="{{padding}}">
+                <input type="number" min="0" max="0.5" step="0.05" value="{{padding}}">
+            </range-picker>
+        </div>
+    </div>
+
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.CustomCellHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.CustomCell'}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-action="toggleCellSize" name="customCellSize" {{checked customCellSize}}>
+        </div>
+    </div>
+    <div class="form-group cell-size-fields" style="display:none">
+        <label>{{localize 'QUICKBATTLEMAP.PixelsPerCell'}}</label>
+        <div class="form-fields">
+            <input type="number" name="cellSize" min="10" max="512" step="1" value="{{cellSize}}">
+        </div>
+    </div>
+
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.WebpHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.ConvertWebp'}}</label>
+        <div class="form-fields">
+            <input type="checkbox" class="webp-toggle" name="toWebp" {{checked webp}}>
+        </div>
+    </div>
+    <div class="form-group webp-quality" data-tooltip="{{localize 'QUICKBATTLEMAP.WebpQualityHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.WebpQuality'}}</label>
+        <div class="form-fields">
+            <range-picker name="webpQuality" value="{{webpQuality}}" min="0.1" max="1" step="0.1">
+                <input type="range" min="0.1" max="1" step="0.1" value="{{webpQuality}}">
+                <input type="number" min="0.1" max="1" step="0.1" value="{{webpQuality}}">
+            </range-picker>
+        </div>
+    </div>
+
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.StorageHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.StorageType'}}</label>
+        <div class="form-fields">
+            <select name="source" class="source-choice">
+                {{selectOptions sources selected=source}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group" data-tooltip="{{localize 'QUICKBATTLEMAP.PathHint'}}">
+        <label>{{localize 'QUICKBATTLEMAP.UploadPath'}}</label>
+        <div class="form-fields">
+            <file-picker type="folder" name="path">
+                <input type="text" name="path" value="{{path}}">
+                <button type="button" class="fa-solid fa-file-import fa-fw icon"></button>
+            </file-picker>
+        </div>
+    </div>
+    <div class="warning path notification error" style="display:none">{{localize 'QUICKBATTLEMAP.PathWarning'}}</div>
+    <div class="form-group bucket-fields" style="display:none">
+        <label>{{localize 'QUICKBATTLEMAP.Bucket'}}</label>
+        <div class="form-fields">
+            <select name="bucket">
+                {{selectOptions bucketOptions selected=bucket}}
+            </select>
+        </div>
+    </div>
+
+    <footer class="sheet-footer flexrow">
+        <button type="submit">
+            <i class="fa-solid fa-download"></i> {{localize 'QUICKBATTLEMAP.ImportMap'}}
+        </button>
+    </footer>
+</section>

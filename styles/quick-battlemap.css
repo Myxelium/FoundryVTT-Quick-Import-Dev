@@ -1,36 +1,42 @@
-/* Keep it minimal and lean on Foundry's built-in styles */
-#quick-battlemap-drop-area .window-header {
-    user-select: none;
-    cursor: move;
+.quick-battlemap .sheet-tabs {
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
 }
 
-#quick-battlemap-drop-area .quick-battlemap-instructions {
+.quick-battlemap .tab[data-group] {
+    display: none;
+}
+
+.quick-battlemap .tab[data-group].active {
+    display: block;
+}
+
+.quick-battlemap .quick-battlemap-instructions {
     font-style: italic;
     margin: 0 0 0.5rem 0;
-    border-bottom: 1px solid var(--color-border-light-primary);
 }
 
-#quick-battlemap-drop-area .status-value {
+.quick-battlemap .status-value {
     font-weight: bold;
 }
 
-#quick-battlemap-drop-area .create-scene-button {
+.quick-battlemap .create-scene-button,
+.quick-battlemap .universal-import button[type="submit"] {
     margin-left: auto;
 }
 
-/* Drag-and-drop highlight */
-#quick-battlemap-drop-area.highlight .window-content {
+.quick-battlemap .quick-import.highlight .area,
+.quick-battlemap .quick-import.highlight #dropZone {
     outline: 2px solid var(--color-border-highlight, #ff6400);
     background-color: rgba(255, 100, 0, 0.08);
 }
 
-/* Spinner row */
-#quick-battlemap-drop-area .ebm-progress-row {
+.quick-battlemap .ebm-progress-row {
     align-items: center;
     gap: 8px;
 }
 
-#quick-battlemap-drop-area .ebm-spinner {
+.quick-battlemap .ebm-spinner {
     width: 20px;
     display: flex;
     align-items: center;
@@ -38,27 +44,81 @@
     color: var(--color-primary, #ff6400);
 }
 
-#quick-battlemap-drop-area .ebm-no-grid {
+.quick-battlemap .ebm-no-grid {
     justify-content: unset !important;
 }
 
-#quick-battlemap-drop-area .ebm-no-grid input {
-    margin: 0px 0px !important;
-}
-
-#quick-battlemap-drop-area .area {
+.quick-battlemap .area {
     width: 100%;
-    padding: 15px;
-    border: 1px solid #333;
-    background: rgba(0, 0, 0, 0.7);
+    padding: 12px;
+    border: 1px solid var(--color-border-dark, #333);
+    background: rgba(0, 0, 0, 0.35);
 }
 
-#quick-battlemap-drop-area #dropZone {
-    border: 2px dashed #bbb;
-    -webkit-border-radius: 5px;
+.quick-battlemap #dropZone {
+    border: 2px dashed var(--color-border-light-primary, #bbb);
     border-radius: 5px;
-    padding: 50px;
+    padding: 36px 16px;
     text-align: center;
-    font: 21pt bold arial;
-    color: #bbb;
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: var(--color-text-light-6, #bbb);
+}
+
+.quick-battlemap-quick-import {
+    flex: 1;
+}
+
+.quick-battlemap .map-files {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.quick-battlemap .map-file {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.quick-battlemap .map-file input {
+    flex: 1;
+}
+
+.quick-battlemap .map-file input[type="file"] {
+    flex: 2;
+}
+
+.quick-battlemap .map-file > :last-child {
+    flex: 0 0 1.5rem;
+    text-align: center;
+}
+
+.quick-battlemap .map-add {
+    text-align: center;
+    margin: 0.25rem 0;
+}
+
+.quick-battlemap .stitch-options {
+    margin: 0.75rem 0;
+}
+
+#quick-battlemap-map-progress progress {
+    width: 100%;
+}
+
+#quick-battlemap-map-progress .map-progress-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+#quick-battlemap-map-progress .map-progress-label {
+    font-weight: bold;
+}
+
+#quick-battlemap-map-progress .map-progress-detail {
+    opacity: 0.75;
 }

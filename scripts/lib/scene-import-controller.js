@@ -8,12 +8,13 @@
  * @module SceneImportController
  */
 
-import { ImportPanelView } from './import-panel-view.js';
+import { QuickImportApplication } from './import-application.js';
 import { SceneDataNormalizer } from './scene-data-normalizer.js';
 import { MediaStorageService } from './media-storage-service.js';
 import { GridDetectionService } from './grid-detection-service.js';
-import { FileProcessor } from './file-processor.js';
+import { FileProcessor, isUniversalVttData } from './file-processor.js';
 import { SceneBuilder } from './scene-builder.js';
+import { MODULE_LOG_PREFIX, NO_GRID_STORAGE_KEY } from './constants.js';
 
 /**
  * @typedef {Object} BackgroundMediaData
@@ -23,11 +24,6 @@ import { SceneBuilder } from './scene-builder.js';
  * @property {boolean} isVideo - Whether the media is a video file
  */
 
-/** Module identifier for console logging */
-const MODULE_LOG_PREFIX = 'Quick Battlemap Importer';
-
-/** LocalStorage key for persisting no-grid preference */
-const NO_GRID_STORAGE_KEY = 'quick-battlemap:no-grid';
 
 /**
  * Controller class that manages the battlemap import process.
@@ -42,7 +38,7 @@ export class SceneImportController {
         this.importedSceneStructure = null;
 
         /** @type {boolean} Enable verbose console logging for debugging */
-        this.isDebugLoggingEnabled = true;
+        this.isDebugLoggingEnabled = false;
 
         /** @type {number} Counter for tracking concurrent async operations */
         this.pendingOperationCount = 0;
@@ -51,7 +47,7 @@ export class SceneImportController {
         this.isNoGridModeEnabled = false;
 
         // Initialize services
-        this.panelView = new ImportPanelView();
+        this.panelView = new QuickImportApplication();
         this.dataNormalizer = new SceneDataNormalizer();
         this.storageService = new MediaStorageService();
         this.gridDetectionService = new GridDetectionService();
@@ -69,14 +65,14 @@ export class SceneImportController {
 
     /**
      * Show the import panel to the user. Validates GM permissions before displaying.
+     * @param {"quick"|"universal"} [tab]
      */
-    showImportPanel() {
+    showImportPanel(tab) {
         if (!game.user?.isGM) {
-            ui.notifications?.warn?.(game.i18n.localize('QUICKBATTLEMAP.GMOnly') ?? 'GM only');
+            ui.notifications?.warn?.(game.i18n.localize('QUICKBATTLEMAP.GMOnly'));
             return;
         }
-        this.panelView.ensureCreated();
-        this.panelView.show();
+        return this.panelView.show(tab);
     }
 
     /**
@@ -90,9 +86,21 @@ export class SceneImportController {
      * Register a drop event handler on the Foundry canvas.
      */
     registerCanvasDropHandler() {
-        canvas.stage?.on?.('drop', (event) => {
-            this.processDroppedFiles(event.data.originalEvent);
+        Hooks.on('canvasReady', () => this.bindCanvasDrop());
+        this.bindCanvasDrop();
+    }
+
+    /**
+     * Listen for files dropped on the canvas. Safe to call more than once.
+     */
+    bindCanvasDrop() {
+        const stage = canvas.stage;
+        if (!stage?.on || stage === this.canvasDropStage) return;
+        stage.on('drop', (event) => {
+            const nativeEvent = event?.data?.originalEvent || event?.nativeEvent || event?.data?.nativeEvent || event;
+            this.processDroppedFiles(nativeEvent);
         });
+        this.canvasDropStage = stage;
     }
 
     /**
@@ -107,6 +115,7 @@ export class SceneImportController {
         this.panelView.onCloseRequested = () => this.hideImportPanel();
         this.panelView.onFilesDropped = (event) => this.processDroppedFiles(event);
         this.panelView.onNoGridPreferenceChanged = (isEnabled) => this.handleNoGridPreferenceChange(isEnabled);
+        this.panelView.onRendered = () => this.reflectImportState();
     }
 
     /**
@@ -131,10 +140,8 @@ export class SceneImportController {
             localStorage.setItem(NO_GRID_STORAGE_KEY, String(this.isNoGridModeEnabled));
         } catch (_error) { /* localStorage may not be available */ }
 
-        const wallStatusElement = document.querySelector('.wall-data-status .status-value');
-        if (wallStatusElement && this.isNoGridModeEnabled && wallStatusElement.title === 'Auto-detected grid') {
-            wallStatusElement.textContent = '❌';
-            wallStatusElement.title = '';
+        if (this.isNoGridModeEnabled && this.panelView.wallStatusTooltip === 'Auto-detected grid') {
+            this.panelView.updateWallDataStatus(false, '');
         }
     }
 
@@ -142,25 +149,54 @@ export class SceneImportController {
      * Process files dropped onto the panel or canvas.
      * @param {DragEvent} dropEvent - The native drag-and-drop event
      */
-    processDroppedFiles(dropEvent) {
-        const droppedFiles = dropEvent.dataTransfer?.files;
-        if (!droppedFiles) return;
+    async processDroppedFiles(dropEvent) {
+        if (!game.user?.isGM) return;
+        const droppedFiles = [...(dropEvent?.dataTransfer?.files ?? [])];
+        if (!droppedFiles.length) return;
 
-        for (let i = 0; i < droppedFiles.length; i++) {
-            const file = droppedFiles[i];
+        const universalFiles = [];
+        for (const file of droppedFiles) {
             const fileType = this.fileProcessor.getFileType(file);
 
-            switch (fileType) {
-                case 'image':
-                    this.handleImageFile(file);
-                    break;
-                case 'video':
-                    this.handleVideoFile(file);
-                    break;
-                case 'json':
-                    this.handleJsonConfigFile(file);
-                    break;
+            if (fileType === 'image') {
+                await this.showImportPanel('quick');
+                await this.handleImageFile(file);
+            } else if (fileType === 'video') {
+                await this.showImportPanel('quick');
+                this.handleVideoFile(file);
+            } else if (fileType === 'uvtt') {
+                universalFiles.push(file);
+            } else if (fileType === 'json') {
+                const universal = await this.readUniversalVttOrConfig(file);
+                if (universal) universalFiles.push(file);
             }
+        }
+
+        if (universalFiles.length) {
+            await this.showImportPanel('universal');
+            for (const file of universalFiles) this.panelView.addMapFile(file);
+        }
+    }
+
+    /**
+     * Parse a JSON file. Universal VTT documents are returned to the caller.
+     * Other JSON is stored as quick-import wall and light data.
+     * @param {File} jsonFile
+     * @returns {Promise<boolean>} True when the file is a Universal VTT map
+     */
+    async readUniversalVttOrConfig(jsonFile) {
+        try {
+            const processedJson = await this.fileProcessor.processJsonFile(jsonFile);
+            if (isUniversalVttData(processedJson.parsedContent)) return true;
+            await this.showImportPanel('quick');
+            this.importedSceneStructure = processedJson.parsedContent;
+            this.panelView.updateWallDataStatus(true, jsonFile.name);
+            this.updateCreateButtonState();
+            return false;
+        } catch (error) {
+            console.error(`${MODULE_LOG_PREFIX} | JSON parse error:`, error);
+            ui.notifications.error(game.i18n.localize('QUICKBATTLEMAP.InvalidJSON'));
+            return false;
         }
     }
 
@@ -223,29 +259,24 @@ export class SceneImportController {
     }
 
     /**
-     * Process a JSON configuration file.
-     * @param {File} jsonFile - The dropped JSON file
-     */
-    async handleJsonConfigFile(jsonFile) {
-        try {
-            const processedJson = await this.fileProcessor.processJsonFile(jsonFile);
-            this.importedSceneStructure = processedJson.parsedContent;
-            this.panelView.updateWallDataStatus(true, jsonFile.name);
-            this.updateCreateButtonState();
-        } catch (error) {
-            console.error(`${MODULE_LOG_PREFIX} | JSON parse error:`, error);
-            ui.notifications.error(game.i18n.localize("QUICKBATTLEMAP.InvalidJSON"));
-        }
-    }
-
-    /**
      * Update the enabled state of the "Create Scene" button.
      */
     updateCreateButtonState() {
-        const createButton = document.querySelector('.create-scene-button');
-        if (createButton) {
-            createButton.disabled = !this.backgroundMediaData;
-        }
+        this.panelView.setCreateButtonEnabled(!!this.backgroundMediaData);
+    }
+
+    /**
+     * Push the current quick-import state into the panel after it renders.
+     */
+    reflectImportState() {
+        this.panelView.setNoGridCheckboxState(this.isNoGridModeEnabled);
+        this.panelView.updateBackgroundMediaStatus(
+            !!this.backgroundMediaData,
+            this.backgroundMediaData?.filename || ''
+        );
+        const wallLabel = this.importedSceneStructure ? (this.panelView.wallStatusTooltip || 'Loaded') : '';
+        this.panelView.updateWallDataStatus(!!this.importedSceneStructure, wallLabel);
+        if (!this.panelView.busyMessage) this.updateCreateButtonState();
     }
 
     /**
@@ -271,6 +302,7 @@ export class SceneImportController {
 
             const mediaDimensions = await this.fileProcessor.getMediaDimensions(this.backgroundMediaData);
             const normalizedData = this.dataNormalizer.normalizeToFoundryFormat(this.importedSceneStructure);
+            if (this.isNoGridModeEnabled) normalizedData.grid.type = 0;
 
             this.logNormalizedData(normalizedData);
 
@@ -280,16 +312,10 @@ export class SceneImportController {
                 sceneName: sceneName,
                 width: normalizedData.width || mediaDimensions.width || 1920,
                 height: normalizedData.height || mediaDimensions.height || 1080,
-                padding: normalizedData.padding,
-                backgroundColor: normalizedData.backgroundColor,
-                globalLight: normalizedData.globalLight,
-                darkness: normalizedData.darkness
+                normalized: normalizedData
             });
 
             await this.sceneBuilder.activateAndWaitForCanvas(createdScene);
-            await this.sceneBuilder.applyGridSettings(createdScene, normalizedData.grid, this.isNoGridModeEnabled);
-            await this.sceneBuilder.createWalls(createdScene, normalizedData.walls);
-            await this.sceneBuilder.createLights(createdScene, normalizedData.lights);
 
             this.cleanupAfterCreation(sceneName);
 
@@ -377,9 +403,7 @@ export class SceneImportController {
 
         this.panelView.updateBackgroundMediaStatus(false, '');
         this.panelView.updateWallDataStatus(false, '');
-
-        const createButton = document.querySelector('.create-scene-button');
-        if (createButton) createButton.disabled = true;
+        this.panelView.setCreateButtonEnabled(false);
 
         ui.notifications.info(`${game.i18n.localize("QUICKBATTLEMAP.SceneCreated")}: ${sceneName}`);
     }
@@ -392,6 +416,7 @@ export class SceneImportController {
         if (this.importedSceneStructure) return;
 
         const result = await this.gridDetectionService.detectGridFromImage(imageFile);
+        if (this.importedSceneStructure) return;
         if (!result || !Number.isFinite(result.gridSize) || result.gridSize <= 0) return;
 
         this.importedSceneStructure = {
